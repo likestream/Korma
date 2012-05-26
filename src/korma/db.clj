@@ -183,7 +183,8 @@
   "Executes the given query with the JDBC driver set to return results
   in chunks of chunksize, then runs func, passing in a lazy seq of the
   ResultSet as its argument. This is intended for queries that return
-  very large result sets which would otherwise not fit into memory."
+  very large result sets which would otherwise not fit into memory.
+  "
   [chunksize query func]
   (let [
         sql (:sql-str query)
@@ -206,6 +207,16 @@
  "Executes the given query with the JDBC driver set to return results
   in chunks of chunksize, then runs func, passing in a lazy seq of the
   ResultSet as its argument. This is intended for queries that return
-  very large result sets which would otherwise not fit into memory."
+  very large result sets which would otherwise not fit into memory.
+
+  For example, this query gets only 10k results out of a very large
+  table (via the lazy sequence, not with a LIMIT clause) in chunks of
+  1k results, and returns the last item:
+
+      (with-lazy-results rs 1000 (query-only (select :very-large-table (fields :foo)))  (last (take 10000 rs)))
+
+  Real queries will most likely be processing the returned data
+  somehow for side effects.
+"
  [results chunksize query & body]
  `(with-lazy-results* ~chunksize ~query (fn [~results] ~@body)))
