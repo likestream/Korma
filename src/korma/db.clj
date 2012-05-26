@@ -192,7 +192,7 @@
                                                          (get-connection db))
                                                        (jdbc/find-connection)
                                                        (get-connection @_default))))]
-      (binding [ijdbc/*db* {:connection conn}] ;; not sure if this binding is necessary, since we're preparing our own statement
+      (binding [ijdbc/*db* {:connection conn}] ;; not sure if this binding is necessary, since we're preparing our own statement, but maybe with-query-results* uses *db*
         (let [initial-autocommit (.getAutoCommit conn)]
           (try
             (.setAutoCommit conn false)
