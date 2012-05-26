@@ -178,3 +178,33 @@
         (jdbc/with-connection cur
           (exec-sql query))
         (exec-sql query)))))
+
+(defn with-lazy-results*
+  "Executes the given query with the JDBC driver set to return results
+  in chunks of chunksize, then runs func, passing in a lazy seq of the
+  ResultSet as its argument. This is intended for queries that return
+  very large result sets which would otherwise not fit into memory."
+  [chunksize query func]
+  (let [conn (.getConnection (:datasource (or (when-let [db (:db query)]
+                                                (get-connection db))
+                                              (jdbc/find-connection)
+                                              (get-connection @_default))))
+        initial-autocommit (.getAutoCommit conn)
+        sql (:sql-str query)
+        params (:params query)]
+    (try
+      (.setAutoCommit conn false)
+      (let [statement (jdbc/prepare-statement conn
+                                              sql
+                                              :fetch-size chunksize)]
+        (ijdbc/with-query-results* [statement params] func))
+      (catch Exception e (handle-exception e sql params))
+      (finally (.setAutoCommit conn initial-autocommit)))))
+
+(defmacro with-lazy-results
+ "Executes the given query with the JDBC driver set to return results
+  in chunks of chunksize, then runs func, passing in a lazy seq of the
+  ResultSet as its argument. This is intended for queries that return
+  very large result sets which would otherwise not fit into memory."
+ [results chunksize query & body]
+ `(with-lazy-results* ~chunksize ~query (fn [~results] ~@body)))
