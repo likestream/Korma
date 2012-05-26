@@ -192,16 +192,15 @@
                                                          (get-connection db))
                                                        (jdbc/find-connection)
                                                        (get-connection @_default))))]
-      (binding [ijdbc/*db* {:connection conn}] ;; not sure if this binding is necessary, since we're preparing our own statement, but maybe with-query-results* uses *db*
-        (let [initial-autocommit (.getAutoCommit conn)]
-          (try
-            (.setAutoCommit conn false)
-            (let [statement (jdbc/prepare-statement conn
-                                                    sql
-                                                    :fetch-size chunksize)]
-              (ijdbc/with-query-results* [statement params] func))
-            (catch Exception e (handle-exception e sql params))
-            (finally (.setAutoCommit conn initial-autocommit))))))))
+      (let [initial-autocommit (.getAutoCommit conn)]
+        (try
+          (.setAutoCommit conn false)
+          (let [statement (jdbc/prepare-statement conn
+                                                  sql
+                                                  :fetch-size chunksize)]
+            (ijdbc/with-query-results* [statement params] func))
+          (catch Exception e (handle-exception e sql params))
+          (finally (.setAutoCommit conn initial-autocommit)))))))
 
 (defmacro with-lazy-results
  "Executes the given query with the JDBC driver set to return results
