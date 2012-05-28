@@ -205,9 +205,14 @@
 
 (defmacro with-lazy-results
  "Executes the given query with the JDBC driver set to return results
-  in chunks of chunksize, then runs func, passing in a lazy seq of the
-  ResultSet as its argument. This is intended for queries that return
-  very large result sets which would otherwise not fit into memory.
+  in chunks of chunksize, then runs body, with results bound to a lazy
+  seq wrapping the lazy ResultSet. Rows will be fetched from the
+  server in chunks of chunksize and made available to the lazy seq as
+  needed.
+
+  This is intended for queries that return very large result sets
+  which would otherwise not fit into memory. Processing can begin
+  immediately after the first chunk is returned from the server.
 
   For example, this query gets only 10k results out of a very large
   table (via the lazy sequence, not with a LIMIT clause) in chunks of
