@@ -199,7 +199,7 @@
           (let [statement (jdbc/prepare-statement conn
                                                   sql
                                                   :fetch-size chunksize)]
-            (ijdbc/with-query-results* [statement params] func))
+            (ijdbc/with-query-results* (into [statement nil] params) func))
           (catch Exception e (handle-exception e sql params))
           (finally (.setAutoCommit conn initial-autocommit)))))))
 
